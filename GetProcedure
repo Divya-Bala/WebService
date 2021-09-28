@@ -1,50 +1,68 @@
 H DFTACTGRP(*Yes)                                                       
- *                                                                      
+ * External Prototype Declaration                                                                     
 D Cmd             PR                  EXTPGM('QCMDEXC')                 
 D                              200A   OPTIONS(*Varsize) Const           
 D                               15P 5 Const                             
- *                                                                      
+ * Variable Declarations                                                                      
 D Command         S            200a                                     
 D Response        S           4096a   Inz                               
 D Url             S            200a                                     
 D Pos             S              5p 0 Inz                               
- *                                                                      
+ *  Get the URL from the User as a Input                                                                    
 C     *Entry        Plist                                               
 C                   parm                    url                         
  *                                                                      
- /Free                                                                  
-  Pos = %Scan(' ': URl);                                                
+ /Free   
+  //Remove Blanks in Input URL
+  Pos = %Scan(' ': URL);                                                
   If Pos > 0;                                                           
      Url = %Trim(%Subst(url:1:pos-1));                                  
-  Endif;                                                                
+  Endif;            
+  
+  //URL Encoding
   Command = 'CHGJOB CCSID(37)';                             
   Cmd(command:%len(%Trim(Command)));                        
                                                           
   Exec Sql                                                  
        Set option commit = *none;                           
   Exec sql                                                  
-       Drop table Qtemp/Response;                           
-  exec Sql                                                  
-       Create Table Qtemp/Response (Data varchar(4096));    
+       Drop table Qtemp/Response;  
+       
+  //Create table to store the Get Response     
+  Exec Sql                                                  
+       Create Table Qtemp/Response (Data varchar(4096));  
+       
+  //Declare Cursor     
   Exec Sql                                    
      Declare C1 Cursor for                  
      select data from (values char          
      (systools.httpgetclob(:URL, ''),4096)  
-     ) ws(data);                            
-  exec Sql                                    
-       open c1;                               
-  exec sql                                    
-       Fetch c1 into :Response;               
-  exec sql                                         
+     ) ws(data);   
+    
+  //Open Cursor  
+  Exec Sql                                    
+       open c1; 
+       
+  //Fetch the Data     
+  Exec sql                                    
+       Fetch c1 into :Response;     
+       
+  //Insert Data into Table     
+  Exec sql                                         
        insert into qtemp/Response values(:Response);  
-  exec sql                                                      
-       close c1;                                                
-  command = 'cpytoimpf fromfile(qtemp/response) ' +             
+        
+  //Close Cursor      
+  Exec sql                                                      
+       close c1;         
+       
+  //Copy the Data to Impf file       
+  Command = 'cpytoimpf fromfile(qtemp/response) ' +             
             'tostmf(''/home/Divya/Get.Txt'') ' +                
             'rcddlm(*CRLF) strdlm(*None) Mbropt(*Replace)';     
   Cmd(command:%len(%Trim(Command)));                            
   command = 'DSPF ''/home/Divya/Get.Txt''';                     
-  Cmd(command:%len(%Trim(Command)));                            
+  Cmd(command:%len(%Trim(Command)));
+  
   *Inlr = *on;                                                       
        
        
