@@ -1,6 +1,7 @@
 **Free                                                                    
-       Ctl-Opt Option(*Nodebugio:*Srcstmt:*Nounref) ;                     
-                                                                          
+       Ctl-Opt Option(*Nodebugio:*Srcstmt:*Nounref) ;    
+       
+       //Declare the HTTP Related Variables                                                                   
        Dcl-S ResponseMsg       Varchar(600) ;                             
        Dcl-S ResponseHeader    Varchar(1000) ;                            
        Dcl-S ReturnedSQLCode   Char(5) ;                                  
@@ -8,7 +9,9 @@
        Dcl-s MessageText       varchar(32740);                            
        Dcl-s MessageLength     int(5);                                    
        Dcl-S tokenheader       Char(4096) ;                               
-       Dcl-S Body              Char(4096) ;                               
+       Dcl-S Body              Char(4096) ;   
+       
+       //Declare the Data to be Posted
        Dcl-s ID                Char(10) ;                                 
        Dcl-s Name              Char(50) ;                                 
        Dcl-s Email             Char(50) ;                                 
@@ -36,6 +39,7 @@
        '<header name="Authorization" +                           
         value="Bearer c1565a3c96e5d0b2cf3ee60bcc3f1e9f44d12+      
                c161c1635afe33e77003c86e9a7"></header></httpHeader>' ;    
+               
         ID        = ' ' ;                                             
         Name      = p_name   ; 
         Email     = p_email  ; 
@@ -49,8 +53,8 @@
               '"status":"' + %trim(status) + '"'+       
               '}';                                      
                                                         
-                                                        
-       // Call API to get the values                           
+                                               
+       // Call API to Post the values                           
        EXEC SQL                                                
             SELECT Coalesce(Varchar(ResponseMsg,9999),' '),    
                    Varchar(ResponseHttpHeader,1000)            
@@ -67,13 +71,12 @@
                
       // Display the Status of Post Method!        
       If ReturnedSqlCode = *Blanks;    
-         DSPLY 'Success';              
-                                 
+         DSPLY 'Success!';                                        
       Else;                            
-         DSPLY 'Failed';               
+         DSPLY 'Failed!';               
       Endif;                           
                                  
-     *inlr = *on ;                             
+     *Inlr = *On ;                             
                
                
                
