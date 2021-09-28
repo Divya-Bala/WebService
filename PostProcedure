@@ -1,0 +1,82 @@
+**Free                                                                    
+       Ctl-Opt Option(*Nodebugio:*Srcstmt:*Nounref) ;                     
+                                                                          
+       Dcl-S ResponseMsg       Varchar(600) ;                             
+       Dcl-S ResponseHeader    Varchar(1000) ;                            
+       Dcl-S ReturnedSQLCode   Char(5) ;                                  
+       Dcl-S D_Url             Char(4096) ;                               
+       Dcl-s MessageText       varchar(32740);                            
+       Dcl-s MessageLength     int(5);                                    
+       Dcl-S tokenheader       Char(4096) ;                               
+       Dcl-S Body              Char(4096) ;                               
+       Dcl-s ID                Char(10) ;                                 
+       Dcl-s Name              Char(50) ;                                 
+       Dcl-s Email             Char(50) ;                                 
+       Dcl-s Gender            Char(10) ;                                 
+       Dcl-s Status            Char(10) ;                                 
+                                                                          
+       dcl-pi POST1 ;                                                     
+         p_name   char(50);                                               
+         p_email  char(50); 
+         p_gender char(10); 
+         p_status char(10);     
+       end-pi; 
+       
+       // Url                                              
+       D_url = 'https://gorest.co.in/public-api/users';    
+       
+       Exec sql set option commit = *none;   
+       
+       // URL encoding                                                
+       Exec sql CALL QSYS2.QCMDEXC('CHGJOB CCSID(37)');               
+                                                               
+       // Token Header                                                
+       tokenheader = '<httpHeader><header name="content-type"  +      
+       value="application/json"></header>'  +                    
+       '<header name="Authorization" +                           
+        value="Bearer c1565a3c96e5d0b2cf3ee60bcc3f1e9f44d12+      
+               c161c1635afe33e77003c86e9a7"></header></httpHeader>' ;    
+        ID        = ' ' ;                                             
+        Name      = p_name   ; 
+        Email     = p_email  ; 
+        Gender    = p_gender ; 
+        Status    = p_status ; 
+           
+        // Token Body                                          
+        body = '{"name":"' + %trim(name) + '",'+         
+              '"email":"' + %trim(email) + '",'+        
+              '"gender":"' + %trim(gender) + '",'+      
+              '"status":"' + %trim(status) + '"'+       
+              '}';                                      
+                                                        
+                                                        
+       // Call API to get the values                           
+       EXEC SQL                                                
+            SELECT Coalesce(Varchar(ResponseMsg,9999),' '),    
+                   Varchar(ResponseHttpHeader,1000)            
+                   INTO :ResponseMsg, :ResponseHeader          
+                   FROM Table(Systools.HttpPostClobVerbose(    
+                   trim(:d_url),                                  
+                   trim(:tokenheader),   
+                   trim(:body)) )        
+                   as InternalServices;  
+          
+      // Validate the response from SQL              
+      Exec sql GET DIAGNOSTICS CONDITION 1           
+               :ReturnedSqlCode = DB2_RETURNED_SQLCODE ;     
+               
+      // Display the Status of Post Method!        
+      If ReturnedSqlCode = *Blanks;    
+         DSPLY 'Success';              
+                                 
+      Else;                            
+         DSPLY 'Failed';               
+      Endif;                           
+                                 
+     *inlr = *on ;                             
+               
+               
+               
+               
+        
+        
